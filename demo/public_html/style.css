@@ -1,0 +1,17 @@
+#video {
+  position: relative;
+  display: block;
+  position: relative;
+  width: 640px;
+  height: 360px;
+  background-color: #CCC;
+  margin: 20px auto; }
+
+#buttons {
+  position: relative;
+  text-align: center; }
+
+#debug {
+  position: absolute;
+  bottom: 0;
+  color: #CCC; }

@@ -1,7 +1,7 @@
 /*!
  *	WIREWAX VIDEO HELPER
  *
- *	1.1
+ *	1.2
  *
  *	author: Carlo J. Santos
  *	email: carlosantos@gmail.com
@@ -42,6 +42,7 @@ WireWaxPlayer.prototype = {
 	flag_ready: false,
 	flag_vol_nonce: true,
 	flag_vol_mute: false,
+	flag_events: false,
 	load_int: null,
 	init_int: null,
 	prog_int: null,
@@ -118,7 +119,9 @@ WireWaxPlayer.prototype = {
 			clearInterval(this.load_int);
 
 			if(this.proxy) {
+				
 				this.destroy();
+				
 				setTimeout(()=>{
 					this.load(params);
 				}, 500)
@@ -145,11 +148,11 @@ WireWaxPlayer.prototype = {
 
 			this.dom_container.appendChild(this.proxy);
 
-			for ( let key in window.wirewax.events.listeners ) {
-				window.wirewax.addEventListener( window.wirewax.events.listeners[key], (e) => {
-					this.eventHandler(e);
-				} );
-			}
+			if(!this.flag_events)
+				this.setListeners();
+
+			this.flag_events = true;
+			
 
 			window.wirewax.playerId = 'proxy_'+this.params.id;
 
@@ -502,6 +505,7 @@ WireWaxPlayer.prototype = {
 	destroy() {
 		this.stop();
 		this.stopProgress();
+
 		if(this.dom_container)
 			this.dom_container.innerHTML = '';
 		this.proxy = null;
@@ -526,6 +530,15 @@ WireWaxPlayer.prototype = {
 			if( this.dom_debug ) {
 				this.dom_debug.innerHTML += ( str2 ? ( str2 + ': ' ) : '' ) + str + '<br>';
 			}
+		}
+	},
+
+	setListeners() {
+
+		for ( let key in window.wirewax.events.listeners ) {
+			window.wirewax.addEventListener( window.wirewax.events.listeners[key], (e) => {
+				this.eventHandler(e);
+			} );
 		}
 	},
 

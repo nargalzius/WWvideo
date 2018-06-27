@@ -1,12 +1,12 @@
 /*!
  *	WIREWAX VIDEO HELPER
  *
- *	1.3
+ *	1.4
  *
  *	author: Carlo J. Santos
  *	email: carlosantos@gmail.com
- *	documentation: 
- *  demo: https://codepen.io/nargalzius/full/QxZWaq/
+ *	documentation: https://github.com/nargalzius/WWvideo
+ *  demo: https://codepen.io/nargalzius/full/QxZWaq
  *	Copyright (c) 2018, All Rights Reserved, www.nargalzius.com
  */
 
@@ -28,7 +28,8 @@ WireWaxPlayer.prototype = {
 		startmuted: false,
 		cover: true,
 		chromeless: false,
-		replaywithsound: true
+		replaywithsound: true,
+		continuecfs: true
 	},
 	api: false,
 	playhead: 0,
@@ -212,6 +213,7 @@ WireWaxPlayer.prototype = {
 				this.resetTracking();
 				this.flag_paused = false;
 				this.flag_finished = true;
+				this.params.continuecfs = true;
 
 				if(this.params.replaywithsound) {
 					this.volume = 1;
@@ -240,7 +242,12 @@ WireWaxPlayer.prototype = {
 						
 						if(!this.flag_vol_nonce && this.flag_playing) {
 							this.track_unmute();
-							this.callback_volume();
+							this.callback_volumechange();
+
+							if(!this.params.continuecfs) {
+								this.seek(0);
+								this.params.continuecfs = true;
+							}
 						}
 
 						this.flag_vol_nonce = false;				
@@ -248,7 +255,7 @@ WireWaxPlayer.prototype = {
 					if( e.data.volume == 0 ) {
 						if(this.playhead > 0 && !this.flag_vol_nonce && !this.flag_vol_mute) {
 							this.track_mute();
-							this.callback_volume();
+							this.callback_volumechange();
 						} else {
 							this.flag_vol_mute = false;
 						}
@@ -406,7 +413,7 @@ WireWaxPlayer.prototype = {
     callback_stop()         { this.trace('------------------ callback_stop'); },
     callback_pause()        { this.trace('------------------ callback_pause'); },
     callback_show()         { this.trace('------------------ callback_show'); },
-    callback_volume()       { this.trace('------------------ callback_volume'); },
+    callback_volumechange()       { this.trace('------------------ callback_volumechange'); },
     callback_cart(data)     { this.trace('------------------ callback_cart'); 
     	this.trace(data, 'cart data');
 	},

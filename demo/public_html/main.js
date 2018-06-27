@@ -1,45 +1,70 @@
+'use strict';
+
 var vid = new WireWaxPlayer();
-	vid.debug = debug;
-	vid.dom_debug = document.getElementById('debug');
-	vid.callback_cart = function(data) {
-		alert(data.product.name)
-	};
+vid.debug = debug;
+vid.dom_debug = document.getElementById('debug');
 
-	vid.callback_progress = function() {
-		// trace(vid.playhead);
-	}
+vid.callback_cart = function (data) {
+	alert(data.product.name);
+};
 
-	vid.callback_end = function() {
-		vid.load('//embed.wirewax.com/8012777?embedLoc=footlocker/');
-	};
-	// vid.init({
-	// 	// player: 'threeSixtyCanvasPlayer',
-	// 	player: 'ff',
-	// 	chromeless: true,
-	// 	startmuted: false,
-	// 	autoplay: false,
-	// 	// src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
-	// 	cover: true,
-	// 	duration: 94.735955,
-	// 	// width: 700,
-	// 	// height: 500,
-	// });
-	vid.init(true);
+vid.callback_progress = function () {
+	// vid.trace(vid.playhead);
+};
 
+vid.callback_end = function () {};
 
-q$('#stop').onclick = () => {
-	vid.stop();
+vid.init();
+
+// vid.init({
+// 	// player: 'threeSixtyCanvasPlayer',
+// 	player: 'ff',
+// 	chromeless: true,
+// 	startmuted: false,
+// 	autoplay: false,
+// 	// src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
+// 	cover: true,
+// 	duration: 94.735955,
+// 	// width: 700,
+// 	// height: 500,
+// });
+
+function debugReset() {
+	document.getElementById('debug').innerHTML = '';
 }
 
-q$('#time').onclick = () => {
-	alert( vid.getTime() );
-}
+document.getElementById('debug').onclick = debugReset;
 
-q$('#destroy').onclick = () => {
-	vid.destroy();
-}
+document.getElementById('video1').onclick = function () {
+	vid.load({
+		src: '//embed.wirewax.com/8022625/7bafa8/',
+		duration: 111.07639
+	});
+	debugReset();
+};
 
-q$('#init').onclick = () => {
-	vid.load('//embed.wirewax.com/8012777?embedLoc=footlocker/');
-}
+document.getElementById('video1ap').onclick = function () {
+	vid.load({
+		src: '//embed.wirewax.com/8022625/7bafa8/',
+		autoplay: true,
+		duration: 111.07639
+	});
+	debugReset();
+};
 
+document.getElementById('video2').onclick = function () {
+	vid.load({
+		src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
+		duration: 94.738446
+	});
+	debugReset();
+};
+
+document.getElementById('video2ap').onclick = function () {
+	vid.load({
+		src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
+		autoplay: true,
+		duration: 94.738446
+	});
+	debugReset();
+};

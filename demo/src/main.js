@@ -1,17 +1,21 @@
 var vid = new WireWaxPlayer();
 	vid.debug = debug;
 	vid.dom_debug = document.getElementById('debug');
+
 	vid.callback_cart = function(data) {
 		alert(data.product.name)
 	};
 
 	vid.callback_progress = function() {
-		// trace(vid.playhead);
+		// vid.trace(vid.playhead);
 	}
 
 	vid.callback_end = function() {
-		vid.load('//embed.wirewax.com/8012777?embedLoc=footlocker/');
+
 	};
+
+	vid.init();
+
 	// vid.init({
 	// 	// player: 'threeSixtyCanvasPlayer',
 	// 	player: 'ff',
@@ -24,21 +28,43 @@ var vid = new WireWaxPlayer();
 	// 	// width: 700,
 	// 	// height: 500,
 	// });
-	vid.init(true);
 
-
-q$('#stop').onclick = () => {
-	vid.stop();
+function debugReset() {
+	document.getElementById('debug').innerHTML = '';
 }
 
-q$('#time').onclick = () => {
-	alert( vid.getTime() );
+document.getElementById('debug').onclick = debugReset;
+
+document.getElementById('video1').onclick = () => {
+	vid.load({
+		src: '//embed.wirewax.com/8022625/7bafa8/',
+		duration: 111.07639
+	});
+	debugReset();
 }
 
-q$('#destroy').onclick = () => {
-	vid.destroy();
+document.getElementById('video1ap').onclick = () => {
+	vid.load({
+		src: '//embed.wirewax.com/8022625/7bafa8/',
+		autoplay: true,
+		duration: 111.07639,
+	});
+	debugReset();
 }
 
-q$('#init').onclick = () => {
-	vid.load('//embed.wirewax.com/8012777?embedLoc=footlocker/');
+document.getElementById('video2').onclick = () => {
+	vid.load({
+		src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
+		duration: 94.738446
+	});
+	debugReset();
+}
+
+document.getElementById('video2ap').onclick = () => {
+	vid.load({
+		src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
+		autoplay: true,
+		duration: 94.738446
+	});
+	debugReset();
 }

@@ -1,7 +1,7 @@
 /*!
  *	WIREWAX VIDEO HELPER
  *
- *	1.00
+ *	1.1
  *
  *	author: Carlo J. Santos
  *	email: carlosantos@gmail.com
@@ -9,6 +9,8 @@
  *
  *	Copyright (c) 2018, All Rights Reserved, www.nargalzius.com
  */
+
+/* eslint-disable no-console */
 
 function WireWaxPlayer(){}
 
@@ -25,12 +27,13 @@ WireWaxPlayer.prototype = {
 		autoplay: false,
 		startmuted: false,
 		cover: true,
-		chromeless: false,
+		chromeless: false
 	},
 	api: false,
 	playhead: 0,
 	volume: -1,
 	update_int: 300,
+	dom_debug: null,
 	flag_paused: false,
 	flag_playing: false,
 	flag_finished: false,
@@ -52,9 +55,9 @@ WireWaxPlayer.prototype = {
 		this.playhead = null;
 		this.duration = null;
 
-		if(Object.keys(this.params).length === 0 && this.params.constructor === Object)
-			Object.assign(this.params, this.default_params);
-		
+		if( Object.keys(this.params).length === 0 )
+			for( let key in this.default_params ) 
+				this.params[key] = this.default_params[key];
 
 		if( params && params.constructor === Object ) {
 			for( let key in params ) 
@@ -67,7 +70,7 @@ WireWaxPlayer.prototype = {
 			this.params.src = params;
 		} else
 		if( params && params.constructor === Boolean ) {
-
+			// NADA
 		} else {
 			delete this.params['src'];
 		}
@@ -79,6 +82,13 @@ WireWaxPlayer.prototype = {
 			this.params.width = this.dom_container.offsetWidth;
 			this.params.height = this.dom_container.offsetHeight;
 		}
+
+		// FORCE MUTESTATE BASED ON AUTOPLAY SETTINGS
+
+		if(this.params.autoplay)
+			this.params.startmuted = true;
+		else
+			this.params.startmuted = false;
 	},
 
 	init(params) {
@@ -91,8 +101,10 @@ WireWaxPlayer.prototype = {
 			
 			this.evaluate(params);
 
-			// this.trace(this.params, 'params (init)');
-			if( this.params.src ) this.load(params);
+			if( this.params.src ) 
+				this.load(params);
+			else
+				this.trace(this.params, 'params (init)');
 
 		} else {
 			this.init_int = setTimeout(() => { this.init(params); }, 500);
@@ -129,7 +141,7 @@ WireWaxPlayer.prototype = {
 			this.proxy.width = this.params.width + 'px';
 			this.proxy.height = this.params.height + 'px';
 			this.proxy.src = this.params.src + extras;
-			this.proxy.frameborder = '0';
+			this.proxy.setAttribute('frameborder', '0');
 
 			this.dom_container.appendChild(this.proxy);
 
@@ -153,26 +165,31 @@ WireWaxPlayer.prototype = {
 		// 	this.trace(e);
 
 		switch(e.name) {
-			case "playerReady":
-				this.flag_ready = true;
-				this.callback_ready();
-				// this.proxy = this.dom_container.getElementsByTagName('video')[0];
-				// trace(this.dom_container.getElementsByTagName('video')[0]);
+			case 'playerReady':
+				if(!this.flag_ready) {
+					this.flag_ready = true;
+					this.flag_vol_nonce = true;
+					this.callback_ready();
+				}
 			break;
-			case "hasPlayed":
+			case 'hasPlayed':
 				if(!this.flag_playing || this.flag_paused) {
 					if(this.flag_paused)
 						this.track_play();
 
 					this.flag_playing = true;
-					this.flag_paused = false;
+					
 					this.startProgress();
-					this.callback_play();
+
+					if(this.flag_paused)
+						this.callback_play();
+
+					this.flag_paused = false;
 				}
 			break;
-			case "videoEnd":
+			case 'videoEnd':
 				this.stopProgress();
-				trace('video duration: '+this.playhead);
+				this.trace('video duration: '+this.playhead);
 				this.track_end();
 				this.callback_end();
 				this.resetTracking();
@@ -180,7 +197,7 @@ WireWaxPlayer.prototype = {
 				this.flag_finished = true;
 				
 			break;
-			case "hasPaused":
+			case 'hasPaused':
 
 				if( !this.flag_paused && this.flag_playing && !this.flag_stopping ) {
 					this.stopProgress();
@@ -189,17 +206,22 @@ WireWaxPlayer.prototype = {
 					this.flag_paused = true;
 				}
 			break;
-			case "hasSeeked":
+			case 'hasSeeked':
 				if( !this.flag_paused )
 					this.startProgress();
 			break;
-			case "volumeChange":
+			case 'volumeChange':
 
 				if( e.data.volume != this.volume ) {
 					
 					if( this.volume == 0 ) {
-						this.track_unmute();
-						this.callback_volume();
+						
+						if(!this.flag_vol_nonce) {
+							this.track_unmute();
+							this.callback_volume();
+						}
+
+						this.flag_vol_nonce = false;				
 					} else 
 					if( e.data.volume == 0 ) {
 						if(this.playhead > 0 && !this.flag_vol_nonce && !this.flag_vol_mute) {
@@ -212,17 +234,25 @@ WireWaxPlayer.prototype = {
 
 					this.volume = e.data.volume;
 
-				} else {
-					if( this.flag_vol_nonce ) {
+				} else
+				if( this.flag_vol_nonce ) {
+
+					if(this.params.startmuted) {
 						this.volume = 1;
 						this.setVolume(1);
-						this.flag_vol_nonce = false;
 						this.flag_vol_mute = true;
+						this.flag_vol_nonce = false;
+					} 
+					else {
+						this.volume = 0;
+						this.setVolume(1);
+						this.flag_vol_mute = false;
 					}
 				}
 
 			break;
-			case "returnCurrentTime":
+
+			case 'returnCurrentTime': {
 				this.playhead = e.data.currentTime;
 
 				let phpercentage = ( this.playhead / this.params.duration ) * 100;
@@ -234,6 +264,9 @@ WireWaxPlayer.prototype = {
 						this.track_replay();
 					else
 		            	this.track_start();
+
+		            this.callback_play();
+		            this.callback_start();
 				}
 
 				if(this.track.q25 !== true && phpercentage >= 25) {
@@ -254,33 +287,34 @@ WireWaxPlayer.prototype = {
 				// trace(this.playhead);
 
 				this.callback_progress();
+			}
 			break;
 
-			case "scormEvent":
+			case 'scormEvent':
 
 			break;
-			case "renditionChanged":
+			case 'renditionChanged':
 
 			break;
-			case "widgetClosed":
+			case 'widgetClosed':
 				if(this.flag_widget) {
 					this.track_tagClose();
 					this.flag_widget = false;
 				}
 			break;
-			case "widgetShown":
+			case 'widgetShown':
 				this.flag_widget = true;
-				trace(e);
+				this.trace(e);
 				this.track_tagOpen();
 			break;
-			case "clientCustomEvent":
+			case 'clientCustomEvent':
 
 			break;
-			case "tagClick":
+			case 'tagClick':
 				// this.track_tagClick();
 			break;
 			
-			case "addToCart":
+			case 'addToCart':
 				this.callback_cart(e.data)
 			break;
 
@@ -298,7 +332,7 @@ WireWaxPlayer.prototype = {
 	},
 
 	stopProgress() {
-		clearInterval(this.prog_int);
+		if(this.api && this.flag_ready) clearInterval(this.prog_int);
 	},
 
 	updateHander() {
@@ -345,15 +379,19 @@ WireWaxPlayer.prototype = {
     callback_ready()        { this.trace('------------------ callback_ready'); },
     callback_end()          { this.trace('------------------ callback_end'); },
     callback_play()         { this.trace('------------------ callback_play'); },
+    callback_start()         { this.trace('------------------ callback_start'); },
     callback_error()        { this.trace('------------------ callback_error'); },
     callback_stop()         { this.trace('------------------ callback_stop'); },
     callback_pause()        { this.trace('------------------ callback_pause'); },
     callback_show()         { this.trace('------------------ callback_show'); },
     callback_volume()       { this.trace('------------------ callback_volume'); },
-    callback_cart(data)     { this.trace('------------------ callback_cart'); },
+    callback_cart(data)     { this.trace('------------------ callback_cart'); 
+    	this.trace(data, 'cart data');
+	},
 
 	play() {
-		if(this.api && this.flag_ready && !this.flag_widget) {
+		if(this.api && this.flag_ready 
+			&& !this.flag_widget) {
 			if( ( this.flag_playing && this.flag_paused ) || 
 				( !this.flag_playing && !this.flag_paused ) )
 			window.wirewax.triggerEvent(window.wirewax.events.triggers.PLAY);
@@ -364,12 +402,14 @@ WireWaxPlayer.prototype = {
 	},
 
 	pause() {
-		if( this.flag_playing && !this.flag_paused && !this.flag_widget)
+		if( this.api && this.flag_ready &&
+			this.flag_playing && !this.flag_paused && !this.flag_widget)
 			if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.PAUSE);
 	},
 
 	stop() {
-		if( this.flag_playing ) {
+		if( this.api && this.flag_ready && 
+			this.flag_playing ) {
 			if( this.flag_widget ) {
 				this.flag_stopping = true;
 				this.tagClose();
@@ -393,7 +433,8 @@ WireWaxPlayer.prototype = {
 	},
 
 	seek(num) {
-		if(this.api && this.flag_ready && !this.flag_widget) {
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) {
 			this.stopProgress();
 			window.wirewax.triggerEvent(window.wirewax.events.triggers.SEEK, num);
 		}
@@ -408,32 +449,42 @@ WireWaxPlayer.prototype = {
 	},
 
 	tagSeek(num) {
-		if(this.api && this.flag_ready && !this.flag_widget) {
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) {
 			window.wirewax.triggerEvent(window.wirewax.events.triggers.GO_TO_TAG, num);
 			this.track_tagSeek();
 		}
 	},
 
 	tagOpen(num) {
-		if(this.api && this.flag_ready && !this.flag_widget) {
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) {
 			window.wirewax.triggerEvent(window.wirewax.events.triggers.OPEN_TAG, num);
 		}
 	},
 
 	tagClose() {
-		if(this.api && this.flag_ready && this.flag_widget) window.wirewax.triggerEvent(window.wirewax.events.triggers.CLOSE_WIDGET);
+		if(this.api && this.flag_ready && 
+			this.flag_widget) 
+			window.wirewax.triggerEvent(window.wirewax.events.triggers.CLOSE_WIDGET);
 	},
 
 	mute() {
-		if(this.api && this.flag_ready && !this.flag_widget) window.wirewax.triggerEvent(window.wirewax.events.triggers.MUTE_VOLUME);
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) 
+			window.wirewax.triggerEvent(window.wirewax.events.triggers.MUTE_VOLUME);
 	},
 
 	unmute() {
-		if(this.api && this.flag_ready && !this.flag_widget) window.wirewax.triggerEvent(window.wirewax.events.triggers.UNMUTE_VOLUME);
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) 
+			window.wirewax.triggerEvent(window.wirewax.events.triggers.UNMUTE_VOLUME);
 	},
 
 	setVolume(num) {
-		if(this.api && this.flag_ready && !this.flag_widget) window.wirewax.triggerEvent(window.wirewax.events.triggers.CHANGE_VOLUME, num);
+		if(this.api && this.flag_ready && 
+			!this.flag_widget) 
+			window.wirewax.triggerEvent(window.wirewax.events.triggers.CHANGE_VOLUME, num);
 	},
 
 	// custom() {
@@ -451,7 +502,8 @@ WireWaxPlayer.prototype = {
 	destroy() {
 		this.stop();
 		this.stopProgress();
-		this.dom_container.innerHTML = '';
+		if(this.dom_container)
+			this.dom_container.innerHTML = '';
 		this.proxy = null;
 
 		this.params = {};
@@ -488,9 +540,8 @@ if( !window['wirewax'] ) {
 
 	// NO API YET, LOAD MANUALLY
 	if(checkDebug) console.log('LOADING WireWax API');
-	
+
 	let loadFunction = () => {
-		if (typeof window.EventBus != 'undefined') EventBus.dispatch("MAP_LOADED", window);
         if(checkDebug) console.log('WireWax API loaded');
     }
 

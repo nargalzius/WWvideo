@@ -1,12 +1,12 @@
 /*!
  *	WIREWAX VIDEO HELPER
  *
- *	1.2
+ *	1.3
  *
  *	author: Carlo J. Santos
  *	email: carlosantos@gmail.com
  *	documentation: 
- *
+ *  demo: https://codepen.io/nargalzius/full/QxZWaq/
  *	Copyright (c) 2018, All Rights Reserved, www.nargalzius.com
  */
 
@@ -27,7 +27,8 @@ WireWaxPlayer.prototype = {
 		autoplay: false,
 		startmuted: false,
 		cover: true,
-		chromeless: false
+		chromeless: false,
+		replaywithsound: true
 	},
 	api: false,
 	playhead: 0,
@@ -92,6 +93,16 @@ WireWaxPlayer.prototype = {
 			this.params.startmuted = false;
 	},
 
+	checkParams(params) {
+
+		if( params && params.constructor === Object && params.src && !params.duration ) {
+			alert('params.duration needs to be defined when supplying a video src');
+			return true;
+		} else {
+			return false;
+		}
+	},
+
 	init(params) {
 
 		if( window['wirewax'] ) {
@@ -100,12 +111,15 @@ WireWaxPlayer.prototype = {
 			
 			this.api = true;
 			
-			this.evaluate(params);
+			if( !this.checkParams(params) ) {
 
-			if( this.params.src ) 
-				this.load(params);
-			else
-				this.trace(this.params, 'params (init)');
+				this.evaluate(params);
+
+				if( this.params.src ) 
+					this.load(params);
+				else
+					this.trace(this.params, 'params (init)');
+			}
 
 		} else {
 			this.init_int = setTimeout(() => { this.init(params); }, 500);
@@ -118,48 +132,48 @@ WireWaxPlayer.prototype = {
 
 			clearInterval(this.load_int);
 
-			if(this.proxy) {
-				
-				this.destroy();
-				
-				setTimeout(()=>{
-					this.load(params);
-				}, 500)
-				return;
-			}
+			if( params && params.constructor === Object && !this.checkParams(params) ) {
 
-			this.evaluate(params);
+				this.unload();
 
-			this.trace(this.params, 'params (load)');
-			let extras = '?player='+this.params.player
-					   + '&autoplay='+this.params.autoplay
-					   + '&muted='+this.params.startmuted
-					   + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' );
-		
-			if(this.params.cover)
-				extras += '&fullBleed=true';
+				// 	setTimeout(()=>{
 
-			this.proxy = document.createElement('iframe');
-			this.proxy.id = "proxy_"+this.params.id;
-			this.proxy.width = this.params.width + 'px';
-			this.proxy.height = this.params.height + 'px';
-			this.proxy.src = this.params.src + extras;
-			this.proxy.setAttribute('frameborder', '0');
+				this.evaluate(params);
 
-			this.dom_container.appendChild(this.proxy);
-
-			if(!this.flag_events)
-				this.setListeners();
-
-			this.flag_events = true;
+				this.trace(this.params, 'params (load)');
+				let extras = '?player='+this.params.player
+						   + '&autoplay='+this.params.autoplay
+						   + '&muted='+this.params.startmuted
+						   + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' );
 			
+				if(this.params.cover)
+					extras += '&fullBleed=true';
 
-			window.wirewax.playerId = 'proxy_'+this.params.id;
+				this.proxy = document.createElement('iframe');
+				this.proxy.id = "proxy_"+this.params.id;
+				this.proxy.width = this.params.width + 'px';
+				this.proxy.height = this.params.height + 'px';
+				this.proxy.src = this.params.src + extras;
+				this.proxy.setAttribute('frameborder', '0');
+
+				this.dom_container.appendChild(this.proxy);
+
+				if(!this.flag_events)
+					this.setListeners();
+
+				this.flag_events = true;
+				
+				window.wirewax.playerId = 'proxy_'+this.params.id;
+
+				// 	}, 500);
+
+			} else {
+				alert('load() method requires parameter object');
+			}
 
 		} else {
 			this.load_int = setTimeout(() => { this.load(params); }, 500);
 		}
-
 	},
 
 	eventHandler(e) {
@@ -198,7 +212,12 @@ WireWaxPlayer.prototype = {
 				this.resetTracking();
 				this.flag_paused = false;
 				this.flag_finished = true;
-				
+
+				if(this.params.replaywithsound) {
+					this.volume = 1;
+					this.setVolume(1);
+					this.flag_vol_mute = false;
+				}
 			break;
 			case 'hasPaused':
 
@@ -219,7 +238,7 @@ WireWaxPlayer.prototype = {
 					
 					if( this.volume == 0 ) {
 						
-						if(!this.flag_vol_nonce) {
+						if(!this.flag_vol_nonce && this.flag_playing) {
 							this.track_unmute();
 							this.callback_volume();
 						}
@@ -502,7 +521,7 @@ WireWaxPlayer.prototype = {
 
 	},
 
-	destroy() {
+	unload() {
 		this.stop();
 		this.stopProgress();
 
@@ -518,6 +537,10 @@ WireWaxPlayer.prototype = {
 		this.flag_widget = false;
 		this.flag_stopping = false;
 		this.flag_ready = false;
+	},
+
+	destroy() {
+		this.unload();
 	},
 
 	trace(str, str2) {
@@ -566,3 +589,12 @@ if( !window['wirewax'] ) {
     let head = document.getElementsByTagName("head")[0];
         head.appendChild(s);
 }
+
+/* 
+
+CAVEATS FOR README:
+
+- autoplay overrides startmuted
+- unload() / destroy() are the same
+
+*/

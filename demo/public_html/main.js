@@ -15,6 +15,7 @@ vid.callback_progress = function () {
 vid.callback_end = function () {};
 
 vid.init();
+// vid.load();
 
 // vid.init({
 // 	// player: 'threeSixtyCanvasPlayer',

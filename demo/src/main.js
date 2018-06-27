@@ -15,6 +15,7 @@ var vid = new WireWaxPlayer();
 	};
 
 	vid.init();
+	// vid.load();
 
 	// vid.init({
 	// 	// player: 'threeSixtyCanvasPlayer',

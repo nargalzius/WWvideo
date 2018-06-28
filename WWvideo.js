@@ -1,13 +1,13 @@
 /*!
- *	WIREWAX VIDEO HELPER
+ *  WIREWAX VIDEO HELPER
  *
- *	1.5
+ *  1.6
  *
- *	author: Carlo J. Santos
- *	email: carlosantos@gmail.com
- *	documentation: https://github.com/nargalzius/WWvideo
+ *  author: Carlo J. Santos
+ *  email: carlosantos@gmail.com
+ *  documentation: https://github.com/nargalzius/WWvideo
  *  demo: https://codepen.io/nargalzius/full/QxZWaq
- *	Copyright (c) 2018, All Rights Reserved, www.nargalzius.com
+ *  Copyright (c) 2018, All Rights Reserved, www.nargalzius.com
  */
 
 /* eslint-disable no-console */
@@ -16,31 +16,31 @@
 function WireWaxPlayer(){}
 
 WireWaxPlayer.prototype = {
-	debug: false,
-	params: {},
-	default_params: {
-		id: 'video',
-		src: '//embed.wirewax.com/8022625/7bafa8/',
-		width: 533,
-		height: 300,
-		duration: 110.97254,
-		player: 'ww',
-		autoplay: false,
-		startmuted: false,
-		cover: true,
-		chromeless: false,
-		replaywithsound: true,
-		continuecfs: true,
-		overlay: false,
-	},
+    debug: false,
+    params: {},
+    default_params: {
+        id: 'video',
+        src: '//embed.wirewax.com/8022625/7bafa8/',
+        width: 533,
+        height: 300,
+        duration: 110.97254,
+        player: 'ww',
+        autoplay: false,
+        startmuted: false,
+        cover: true,
+        chromeless: false,
+        replaywithsound: true,
+        continuecfs: true,
+        overlay: false,
+    },
 
-	dom_container: null,
-	dom_overlay: null,
-	dom_play: null,
-	dom_sound: null,
+    dom_container: null,
+    dom_overlay: null,
+    dom_play: null,
+    dom_sound: null,
     dom_replay: null,
 
-	svg: {
+    svg: {
         play: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M12 20.016q3.281 0 5.648-2.367t2.367-5.648-2.367-5.648-5.648-2.367-5.648 2.367-2.367 5.648 2.367 5.648 5.648 2.367zM12 2.016q4.125 0 7.055 2.93t2.93 7.055-2.93 7.055-7.055 2.93-7.055-2.93-2.93-7.055 2.93-7.055 7.055-2.93zM9.984 16.5v-9l6 4.5z"></path></svg>',
         sound: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M14.016 3.234q3.047 0.656 5.016 3.117t1.969 5.648-1.969 5.648-5.016 3.117v-2.063q2.203-0.656 3.586-2.484t1.383-4.219-1.383-4.219-3.586-2.484v-2.063zM16.5 12q0 2.813-2.484 4.031v-8.063q2.484 1.219 2.484 4.031zM3 9h3.984l5.016-5.016v16.031l-5.016-5.016h-3.984v-6z"></path></svg>',
         replay: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M12 5.016q3.328 0 5.672 2.344t2.344 5.625q0 3.328-2.367 5.672t-5.648 2.344-5.648-2.344-2.367-5.672h2.016q0 2.484 1.758 4.242t4.242 1.758 4.242-1.758 1.758-4.242-1.758-4.242-4.242-1.758v4.031l-5.016-5.016 5.016-5.016v4.031z"></path></svg>',
@@ -76,180 +76,183 @@ WireWaxPlayer.prototype = {
 
     overlayShow(el) {
 
-    	this.dom_overlay.style.display = 'block';
+        this.dom_overlay.style.display = 'block';
 
-    	let arr = [
-    		this.dom_play, 
-    		this.dom_replay, 
-    		this.dom_sound,
-    	];
+        let arr = [
+            this.dom_play,
+            this.dom_replay,
+            this.dom_sound,
+        ];
 
-    	el.style.display = 'block';
+        el.style.display = 'block';
 
-    	for(let i = 0; i < arr.length; i++) {
-    		if( arr[i] !== el )
-    			arr[i].style.display = 'none';
-    	}
+        for(let i = 0; i < arr.length; i++) {
+            if( arr[i] !== el )
+                arr[i].style.display = 'none';
+        }
 
-    	this.reflow(true);
+        this.reflow(true);
     },
 
-	api: false,
-	playhead: 0,
-	volume: -1,
-	update_int: 300,
-	dom_debug: null,
-	flag_paused: false,
-	flag_playing: false,
-	flag_finished: false,
-	flag_widget: false,
-	flag_stopping: false,
-	flag_ready: false,
-	flag_vol_nonce: true,
-	flag_vol_mute: false,
-	flag_events: false,
-	flag_overlay: false,
-	load_int: null,
-	init_int: null,
-	prog_int: null,
-	proxy: null,
+    api: false,
+    playhead: 0,
+    volume: -1,
+    update_int: 300,
+    dom_debug: null,
+    flag_paused: false,
+    flag_playing: false,
+    flag_finished: false,
+    flag_widget: false,
+    flag_stopping: false,
+    flag_ready: false,
+    flag_vol_nonce: true,
+    flag_muted: false,
+    flag_events: false,
+    flag_overlay: false,
+    load_int: null,
+    init_int: null,
+    error_int: null,
+    flag_error: null,
+    prog_int: null,
+    proxy: null,
 
     centered_controls: {},
-	
 
-	evaluate(params) {
 
-		this.flag_playing = false;
-		this.playhead = null;
-		this.duration = null;
+    evaluate(params) {
 
-		if( Object.keys(this.params).length === 0 )
-			for( let key in this.default_params ) 
-				this.params[key] = this.default_params[key];
+        this.flag_playing = false;
+        this.playhead = null;
+        this.duration = null;
 
-		if( params && params.constructor === Object ) {
-			for( let key in params ) 
-				this.params[key] = params[key];
+        if( Object.keys(this.params).length === 0 )
+            for( let key in this.default_params )
+                this.params[key] = this.default_params[key];
 
-			if(!params.src)
-				delete this.params['src'];
-		} else
-		if( params && params.constructor === String ) {
-			this.params.src = params;
-		} else
-		if( params && params.constructor === Boolean ) {
-			// NADA
-		} else {
-			delete this.params['src'];
-		}
+        if( params && params.constructor === Object ) {
+            for( let key in params )
+                this.params[key] = params[key];
 
-		if(!this.dom_container)
-			this.dom_container = document.getElementById(this.params.id);
+            if(!params.src)
+                delete this.params['src'];
+        } else
+        if( params && params.constructor === String ) {
+            this.params.src = params;
+        } else
+        if( params && params.constructor === Boolean ) {
+            // NADA
+        } else {
+            delete this.params['src'];
+        }
 
-		if( this.dom_container.offsetWidth > 0 && this.dom_container.offsetHeight > 0 ) {
-			this.params.width = this.dom_container.offsetWidth;
-			this.params.height = this.dom_container.offsetHeight;
-		}
+        if(!this.dom_container)
+            this.dom_container = document.getElementById(this.params.id);
 
-		// FORCE MUTESTATE BASED ON AUTOPLAY SETTINGS
+        if( this.dom_container.offsetWidth > 0 && this.dom_container.offsetHeight > 0 ) {
+            this.params.width = this.dom_container.offsetWidth;
+            this.params.height = this.dom_container.offsetHeight;
+        }
 
-		if(this.params.autoplay)
-			this.params.startmuted = true;
-		else
-			this.params.startmuted = false;
-	},
+        // FORCE MUTESTATE BASED ON AUTOPLAY SETTINGS
 
-	checkParams(params) {
+        if(this.params.autoplay)
+            this.params.startmuted = true;
+        else
+            this.params.startmuted = false;
+    },
 
-		if( params && params.constructor === Object && params.src && !params.duration ) {
-			alert('params.duration needs to be defined when supplying a video src');
-			return true;
-		} else {
-			return false;
-		}
-	},
+    checkParams(params) {
 
-	init(params) {
+        if( params && params.constructor === Object && params.src && !params.duration ) {
+            alert('params.duration needs to be defined when supplying a video src');
+            return true;
+        } else {
+            return false;
+        }
+    },
 
-		if( window['wirewax'] ) {
+    init(params) {
 
-			clearInterval(this.init_int);
-			
-			this.api = true;
-			
-			if( !this.checkParams(params) ) {
+        if( window['wirewax'] ) {
 
-				this.evaluate(params);
+            clearInterval(this.init_int);
 
-				if( this.params.src ) 
-					this.load(params);
-				else
-					this.trace(this.params, 'params (init)');
-			}
-		} else {
-			this.init_int = setTimeout(() => { this.init(params); }, 500);
-		}
-	},
+            this.api = true;
 
-	load(params) {
+            if( !this.checkParams(params) ) {
 
-		if(this.api) {
+                this.evaluate(params);
 
-			clearInterval(this.load_int);
+                if( this.params.src )
+                    this.load(params);
+                else
+                    this.trace(this.params, 'params (init)');
+            }
+        } else {
+            this.init_int = setTimeout(() => { this.init(params); }, 500);
+        }
+    },
 
-			if( params && params.constructor === Object && !this.checkParams(params) ) {
+    load(params) {
 
-				this.unload();
+        if(this.api) {
 
-				// 	setTimeout(()=>{
+            clearInterval(this.load_int);
 
-				this.evaluate(params);
+            if( params && params.constructor === Object && !this.checkParams(params) ) {
 
-				this.trace(this.params, 'params (load)');
-				let extras = '?player=' +this.params.player
-						   + '&autoplay=' +this.params.autoplay
-						   + '&muted=' + this.params.startmuted
-						   + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' )
-						   + '&fullBleed=' + this.params.cover;
+                this.unload();
 
-				this.proxy = document.createElement('iframe');
-				this.proxy.id = "proxy_"+this.params.id;
-				this.proxy.width = this.params.width + 'px';
-				this.proxy.height = this.params.height + 'px';
-				this.proxy.src = this.params.src + extras;
-				this.proxy.setAttribute('frameborder', '0');
+                this.evaluate(params);
 
-				this.dom_container.appendChild(this.proxy);
+                if( this.params.chromeless && this.params.overlay )
+                    this.setupOverlay();
 
-				if(!this.flag_events)
-					this.setListeners();
+                this.trace(this.params, 'params (load)');
+                let extras = '?player=' +this.params.player
+                           + '&autoplay=' +this.params.autoplay
+                           + '&muted=' + this.params.startmuted
+                           + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' )
+                           + '&fullBleed=' + this.params.cover;
 
-				this.flag_events = true;
-				
-				window.wirewax.playerId = 'proxy_'+this.params.id;
+                this.proxy = document.createElement('iframe');
+                this.proxy.id = "proxy_"+this.params.id;
+                this.proxy.width = this.params.width + 'px';
+                this.proxy.height = this.params.height + 'px';
+                this.proxy.src = this.params.src + extras;
+                this.proxy.setAttribute('frameborder', '0');
 
-				// 	}, 500);
+                this.dom_container.appendChild(this.proxy);
 
-			} else {
-				alert('load() method requires parameter object');
-			}
+                if(!this.flag_events)
+                    this.setListeners();
 
-		} else {
-			this.load_int = setTimeout(() => { this.load(params); }, 500);
-		}
-	},
+                this.flag_events = true;
 
-	setupOverlay() {
+                window.wirewax.playerId = 'proxy_'+this.params.id;
 
-		this.dom_overlay = document.createElement('div');
-		this.dom_overlay.className = 'wwOverlay';
-		this.dom_overlay.style.position = 'absolute';
-		this.dom_overlay.style.top = '0';
-		this.dom_overlay.style.left = '0';
-		this.dom_overlay.style.width = '100%';
-		this.dom_overlay.style.height = '100%';
+            } else {
+                alert('load() method requires parameter object');
+            }
 
-		// BIG BUTTONS
+        } else {
+            this.load_int = setTimeout(() => { this.load(params); }, 500);
+        }
+    },
+
+    setupOverlay() {
+
+        this.dom_overlay = document.createElement('div');
+        this.dom_overlay.className = 'wwOverlay';
+        this.dom_overlay.style.position = 'absolute';
+        this.dom_overlay.style.top = '0';
+        this.dom_overlay.style.left = '0';
+        this.dom_overlay.style.width = '100%';
+        this.dom_overlay.style.height = '100%';
+        this.dom_overlay.style.cursor = 'auto';
+        // this.dom_overlay.style.display = 'none';
+
+        // BIG BUTTONS
         this.dom_template_play();
         this.addClass(this.dom_play, 'cbtn');
         this.addClass(this.dom_play, 'v_control_bb');
@@ -270,7 +273,7 @@ WireWaxPlayer.prototype = {
         this.dom_sound.style.display = 'block';
         this.dom_sound.style.position = 'absolute';
         this.dom_sound.style.cursor = 'pointer';
-		this.dom_overlay.appendChild(this.dom_sound);
+        this.dom_overlay.appendChild(this.dom_sound);
         this.dom_sound.style.display = 'none';
         this.centered_controls.sound = this.dom_sound;
 
@@ -293,248 +296,266 @@ WireWaxPlayer.prototype = {
         this.centered_controls.replay = this.dom_replay;
 
         let _handler = (e) => {
-        	this.eventHandler(e);
+            this.eventHandler(e);
         };
 
         this.dom_overlay.addEventListener('click', _handler, false );
         this.dom_play.addEventListener('click', _handler, false );
-		this.dom_sound.addEventListener('click', _handler, false );
-		this.dom_replay.addEventListener('click', _handler, false );
+        this.dom_sound.addEventListener('click', _handler, false );
+        this.dom_replay.addEventListener('click', _handler, false );
 
-		this.trace(this.dom_container, 'READY');
-		
+        this.trace(this.dom_container, 'READY');
+
         this.dom_container.appendChild(this.dom_overlay);
 
         this.flag_overlay = true;
         this.reflow(true);
-	},
+    },
 
-	eventHandler(e) {
+    eventHandler(e) {
 
-		// if(e.name != 'returnCurrentTime')
-		// 	this.trace(e);
+        // if(e.name != 'returnCurrentTime')
+        //     this.trace(e);
 
-		switch(e.name) {
-			case 'playerReady':
-				if(!this.flag_ready) {
-					this.flag_ready = true;
-					this.flag_vol_nonce = true;
-					this.callback_ready();
+        switch(e.name) {
+            case 'playerReady':
+                if(!this.flag_ready) {
+                    this.flag_ready = true;
+                    this.flag_vol_nonce = true;
+                    this.callback_ready();
 
-					if( this.params.chromeless && this.params.overlay ) {
-						this.setupOverlay();
-					}
-				}
-			break;
-			case 'hasPlayed':
-				if(!this.flag_playing || this.flag_paused) {
-					if(this.flag_paused)
-						this.track_play();
+                    if( this.params.chromeless && this.params.overlay ) {
+                        this.dom_overlay.style.cursor = 'pointer';
+                        if( this.params.autoplay ) {
+                            this.error_int = setTimeout(()=>{
+                                this.emergencyStop();
+                            }, 5000);
+                        }
+                    }
+                }
+            break;
+            case 'hasPlayed':
+                if(!this.flag_playing || this.flag_paused) {
+                    if(this.flag_paused)
+                        this.track_play();
 
-					this.flag_playing = true;
-					
-					this.startProgress();
+                    this.flag_playing = true;
 
-					if(this.flag_paused)
-						this.callback_play();
+                    this.startProgress();
 
-					this.flag_paused = false;					
-				}
-			break;
-			case 'videoEnd':
-				this.stopProgress();
-				this.trace('video duration: '+this.playhead);
-				this.track_end();
-				this.callback_end();
-				this.resetTracking();
-				this.flag_paused = false;
-				this.flag_finished = true;
-				this.params.continuecfs = true;
+                    if(this.flag_paused)
+                        this.callback_play();
 
-				if(this.params.replaywithsound) {
-					this.volume = 1;
-					this.setVolume(1);
-					this.flag_vol_mute = false;
-				}
+                    this.flag_paused = false;
+                }
 
-				if(this.params.chromeless && this.params.overlay) {
-					this.overlayShow(this.dom_replay);
-				}
+                if(!this.track.started && this.flag_ready) {
+                    clearInterval(this.error_int);
+                }
+            break;
+            case 'videoEnd':
+                this.stopProgress();
+                this.trace('video duration: '+this.playhead);
+                this.track_end();
+                this.callback_end();
+                this.resetTracking();
+                this.flag_paused = false;
+                this.flag_finished = true;
+                this.params.continuecfs = true;
 
-			break;
-			case 'hasPaused':
+                if(this.params.replaywithsound) {
+                    this.volume = 1;
+                    this.setVolume(1);
+                    this.flag_muted = false;
+                }
 
-				if( !this.flag_paused && this.flag_playing && !this.flag_stopping ) {
-					this.stopProgress();
-					this.track_pause();
-					this.callback_pause();
-					this.flag_paused = true;
-				}
-			break;
-			case 'hasSeeked':
-				if( !this.flag_paused )
-					this.startProgress();
-			break;
-			case 'volumeChange':
+                if(this.params.chromeless && this.params.overlay) {
+                    this.overlayShow(this.dom_replay);
+                }
 
-				if( e.data.volume != this.volume ) {
-					
-					if( this.volume == 0 ) {
-						
-						if(!this.flag_vol_nonce && this.flag_playing) {
-							this.track_unmute();
-							this.callback_volumechange();
+            break;
+            case 'hasPaused':
 
-							if(!this.params.continuecfs) {
-								this.seek(0);
-								this.params.continuecfs = true;
-							}
-						}
+                if( !this.flag_paused && this.flag_playing && !this.flag_stopping ) {
+                    this.stopProgress();
+                    this.track_pause();
+                    this.callback_pause();
+                    this.flag_paused = true;
+                }
+            break;
+            case 'hasSeeked':
+                if( !this.flag_paused )
+                    this.startProgress();
+            break;
+            case 'volumeChange':
 
-						this.flag_vol_nonce = false;				
-					} else 
-					if( e.data.volume == 0 ) {
-						if(this.playhead > 0 && !this.flag_vol_nonce && !this.flag_vol_mute) {
-							this.track_mute();
-							this.callback_volumechange();
-						} else {
-							this.flag_vol_mute = false;
-						}
-					} 
+                if( e.data.volume != this.volume ) {
 
-					this.volume = e.data.volume;
+                    if( this.volume == 0 ) {
 
-				} else
-				if( this.flag_vol_nonce ) {
+                        if(!this.flag_vol_nonce && this.flag_playing) {
+                            this.track_unmute();
+                            this.callback_volumechange();
 
-					if(this.params.startmuted) {
-						this.volume = 1;
-						this.setVolume(1);
-						this.flag_vol_mute = true;
-						this.flag_vol_nonce = false;
-					} 
-					else {
-						this.volume = 0;
-						this.setVolume(1);
-						this.flag_vol_mute = false;
-					}
-				}
+                            if(!this.params.continuecfs) {
+                                this.seek(0);
+                                this.params.continuecfs = true;
+                            }
+                        }
 
-			break;
+                        this.flag_vol_nonce = false;
+                    } else
+                    if( e.data.volume == 0 ) {
+                        if(this.playhead > 0 && !this.flag_vol_nonce && !this.flag_muted) {
+                            this.track_mute();
+                            this.callback_volumechange();
+                        } else {
+                            this.flag_muted = false;
+                        }
+                    }
 
-			case 'returnCurrentTime': {
-				this.playhead = e.data.currentTime;
+                    this.volume = e.data.volume;
 
-				let phpercentage = ( this.playhead / this.params.duration ) * 100;
+                } else
+                if( this.flag_vol_nonce ) {
 
-				if( this.track.started !== true && phpercentage > 0 ) {
-					this.track.started = true;
+                    if(this.params.startmuted) {
+                        this.volume = 1;
+                        this.setVolume(1);
+                        this.flag_muted = true;
+                        this.flag_vol_nonce = false;
+                    }
+                    else {
+                        this.volume = 0;
+                        this.setVolume(1);
+                        this.flag_muted = false;
+                    }
+                }
 
-					if(this.flag_finished)
-						this.track_replay();
-					else
-		            	this.track_start();
+            break;
 
-		            this.callback_play();
-		            this.callback_start();
+            case 'returnCurrentTime': {
+                this.playhead = e.data.currentTime;
 
-		            if(this.params.chromeless && this.params.overlay) {
-						if(this.params.startmuted)
-							this.dom_sound.style.display = 'block';
-						else 
-							this.dom_play.style.display = 'block';
+                let phpercentage = ( this.playhead / this.params.duration ) * 100;
 
-						this.reflow(true);
-					}
-				}
+                if( this.track.started !== true && phpercentage > 0 ) {
+                    this.track.started = true;
 
-				if(this.track.q25 !== true && phpercentage >= 25) {
-		            this.track.q25 = true;
-		            this.track_q25();
-		        }
+                    if(this.flag_finished)
+                        this.track_replay();
+                    else
+                        this.track_start();
 
-		        if(this.track.q50 !== true && phpercentage >= 50) {
-		            this.track.q50 = true;
-		            this.track_q50();
-		        }
+                    this.callback_play();
+                    this.callback_start();
 
-		        if(this.track.q75 !== true && phpercentage >= 75) {
-		            this.track.q75 = true;
-		            this.track_q75();
-		        }
+                    if(this.params.chromeless && this.params.overlay) {
+                        if(this.params.startmuted)
+                            this.dom_sound.style.display = 'block';
+                        else
+                            this.dom_play.style.display = 'block';
 
-				// trace(this.playhead);
+                        this.reflow(true);
+                    }
 
-				this.callback_progress();
-			}
-			break;
+                    this.setVendor(this.dom_overlay, 'pointerEvents', 'auto');
+                    this.dom_container.style.cursor = 'auto';
+                    if( this.flag_error )
+                        this.dom_overlay.style.display = 'none';
 
-			case 'scormEvent':
+                }
 
-			break;
-			case 'renditionChanged':
+                if(this.track.q25 !== true && phpercentage >= 25) {
+                    this.track.q25 = true;
+                    this.track_q25();
+                }
 
-			break;
-			case 'widgetClosed':
-				if(this.flag_widget) {
-					this.track_tagClose();
-					this.flag_widget = false;
-				}
-			break;
-			case 'widgetShown':
-				this.flag_widget = true;
-				this.trace(e);
-				this.track_tagOpen();
-			break;
-			case 'clientCustomEvent':
+                if(this.track.q50 !== true && phpercentage >= 50) {
+                    this.track.q50 = true;
+                    this.track_q50();
+                }
 
-			break;
-			case 'tagClick':
-				// this.track_tagClick();
-			break;
-			
-			case 'addToCart':
-				this.callback_cart(e.data)
-			break;
+                if(this.track.q75 !== true && phpercentage >= 75) {
+                    this.track.q75 = true;
+                    this.track_q75();
+                }
 
-			default:
+                // trace(this.playhead);
 
-				if(e.type === 'click') {
+                this.callback_progress();
+            }
+            break;
 
-					if(this.dom_sound.style.display === 'block') {
-						this.unmute();
-					} else {
-						this.play();
-					}	
-					this.dom_overlay.style.display = 'none';				
-				} else {
-					this.trace('nada');
-				}
+            case 'scormEvent':
 
+            break;
+            case 'renditionChanged':
 
-		}
-	},
+            break;
+            case 'widgetClosed':
+                if(this.flag_widget) {
+                    this.track_tagClose();
+                    this.flag_widget = false;
+                }
+            break;
+            case 'widgetShown':
+                this.flag_widget = true;
+                this.trace(e);
+                this.track_tagOpen();
+            break;
+            case 'clientCustomEvent':
 
-	startProgress() {
-		this.stopProgress();
+            break;
+            case 'tagClick':
+                // this.track_tagClick();
+            break;
 
-		this.prog_int = setInterval(()=>{
-			this.updateHander();	
-		}, this.update_int);
-	},
+            case 'addToCart':
+                this.callback_cart(e.data)
+            break;
+            default:
 
-	stopProgress() {
-		if(this.api && this.flag_ready) clearInterval(this.prog_int);
-	},
+                if(e.type === 'click' && (
+                    this.dom_play.style.display === 'block' ||
+                    this.dom_replay.style.display === 'block' ||
+                    this.dom_sound.style.display === 'block' )
+                ) {
+                    this.dom_overlay.style.display = 'none';
 
-	updateHander() {
-		if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.GET_CURRENT_TIME);
+                    if(this.dom_sound.style.display === 'block')
+                        this.unmute();
+                    else
+                        this.play();
 
-		if(this.flag_stopping)
-			this.stopBatch();
-	},
+                    this.dom_sound.style.display === 'none';
+                    this.dom_play.style.display === 'none';
+                    this.dom_replay.style.display === 'none';
 
-	track: {
+                }
+        }
+    },
+
+    startProgress() {
+        this.stopProgress();
+
+        this.prog_int = setInterval(()=>{
+            this.updateHander();
+        }, this.update_int);
+    },
+
+    stopProgress() {
+        if(this.api && this.flag_ready) clearInterval(this.prog_int);
+    },
+
+    updateHander() {
+        if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.GET_CURRENT_TIME);
+
+        if(this.flag_stopping)
+            this.stopBatch();
+    },
+
+    track: {
         started: false,
         q25: false,
         q50: false,
@@ -551,208 +572,211 @@ WireWaxPlayer.prototype = {
         this.flag_paused = false;
     },
 
-    track_start()           { this.trace('------------------ track_start'); },
-    track_stop()            { this.trace('------------------ track_stop'); },
-    track_end()             { this.trace('------------------ track_end'); },
-    track_play()            { this.trace('------------------ track_play'); },
-    track_replay()          { this.trace('------------------ track_replay'); },
-    track_pause()           { this.trace('------------------ track_pause'); },
-    track_mute()            { this.trace('------------------ track_mute'); },
-    track_unmute()          { this.trace('------------------ track_unmute'); },
-    track_q25()             { this.trace('------------------ track_q25'); },
-    track_q50()             { this.trace('------------------ track_q50'); },
-    track_q75()             { this.trace('------------------ track_q75'); },
-    track_tagOpen()			{ this.trace('------------------ track_tagOpen'); },
-    track_tagClose()		{ this.trace('------------------ track_tagClose'); },
-    track_tagSeek()			{ this.trace('------------------ track_tagSeek'); },
-    // track_tagClick()		{ this.trace('------------------ track_tagClick'); },
+    track_start()    { this.trace('track_start',    'DEFAULT CALLBACK'); },
+    track_stop()     { this.trace('track_stop',     'DEFAULT CALLBACK'); },
+    track_end()      { this.trace('track_end',      'DEFAULT CALLBACK'); },
+    track_play()     { this.trace('track_play',     'DEFAULT CALLBACK'); },
+    track_replay()   { this.trace('track_replay',   'DEFAULT CALLBACK'); },
+    track_pause()    { this.trace('track_pause',    'DEFAULT CALLBACK'); },
+    track_mute()     { this.trace('track_mute',     'DEFAULT CALLBACK'); },
+    track_unmute()   { this.trace('track_unmute',   'DEFAULT CALLBACK'); },
+    track_q25()      { this.trace('track_q25',      'DEFAULT CALLBACK'); },
+    track_q50()      { this.trace('track_q50',      'DEFAULT CALLBACK'); },
+    track_q75()      { this.trace('track_q75',      'DEFAULT CALLBACK'); },
+    track_tagOpen()  { this.trace('track_tagOpen',  'DEFAULT CALLBACK'); },
+    track_tagClose() { this.trace('track_tagClose', 'DEFAULT CALLBACK'); },
+    track_tagSeek()  { this.trace('track_tagSeek',  'DEFAULT CALLBACK'); },
 
-    callback_progress()     { /* this.trace('------------------ callback_progress'); */ },
-    callback_ready()        { this.trace('------------------ callback_ready'); },
-    callback_end()          { this.trace('------------------ callback_end'); },
-    callback_play()         { this.trace('------------------ callback_play'); },
-    callback_start()         { this.trace('------------------ callback_start'); },
-    callback_error()        { this.trace('------------------ callback_error'); },
-    callback_stop()         { this.trace('------------------ callback_stop'); },
-    callback_pause()        { this.trace('------------------ callback_pause'); },
-    callback_show()         { this.trace('------------------ callback_show'); },
-    callback_volumechange()       { this.trace('------------------ callback_volumechange'); },
-    callback_cart(data)     { this.trace('------------------ callback_cart'); 
-    	this.trace(data, 'cart data');
-	},
+    callback_progress()     {},
+    callback_ready()        { this.trace('callback_ready',        'DEFAULT CALLBACK'); },
+    callback_end()          { this.trace('callback_end',          'DEFAULT CALLBACK'); },
+    callback_play()         { this.trace('callback_play',         'DEFAULT CALLBACK'); },
+    callback_start()        { this.trace('callback_start',        'DEFAULT CALLBACK'); },
+    callback_error()        { this.trace('callback_error',        'DEFAULT CALLBACK'); },
+    callback_stop()         { this.trace('callback_stop',         'DEFAULT CALLBACK'); },
+    callback_pause()        { this.trace('callback_pause',        'DEFAULT CALLBACK'); },
+    callback_show()         { this.trace('callback_show',         'DEFAULT CALLBACK'); },
+    callback_volumechange() { this.trace('callback_volumechange', 'DEFAULT CALLBACK'); },
+    callback_cart(data)     { this.trace('callback_cart',         'DEFAULT CALLBACK');
+        this.trace(data, 'cart data');
+    },
 
-	play() {
-		if(this.api && this.flag_ready 
-			&& !this.flag_widget) {
-			if( ( this.flag_playing && this.flag_paused ) || 
-				( !this.flag_playing && !this.flag_paused ) )
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.PLAY);
-		} else 
-		if (this.flag_widget) {
-			this.tagClose();
-		}
-	},
+    play() {
+        if(this.api && this.flag_ready
+            && !this.flag_widget) {
+            if( ( this.flag_playing && this.flag_paused ) ||
+                ( !this.flag_playing && !this.flag_paused ) )
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.PLAY);
+        } else
+        if (this.flag_widget) {
+            this.tagClose();
+        }
+    },
 
-	pause() {
-		if( this.api && this.flag_ready &&
-			this.flag_playing && !this.flag_paused && !this.flag_widget)
-			if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.PAUSE);
-	},
+    pause() {
+        if( this.api && this.flag_ready &&
+            this.flag_playing && !this.flag_paused && !this.flag_widget)
+            if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.PAUSE);
+    },
 
-	stop() {
-		if( this.api && this.flag_ready && 
-			this.flag_playing ) {
-			if( this.flag_widget ) {
-				this.flag_stopping = true;
-				this.tagClose();
-			} else {
-				this.stopBatch();
-			}
-		}
-	},
+    stop() {
+        if( this.api && this.flag_ready &&
+            this.flag_playing ) {
+            if( this.flag_widget ) {
+                this.flag_stopping = true;
+                this.tagClose();
+            } else {
+                this.stopBatch();
+            }
+        }
+    },
 
-	stopBatch() {
-		this.flag_stopping = true;
+    stopBatch() {
+        this.flag_stopping = true;
 
-		this.stopProgress();
-		this.pause();
-		this.seek(0);
-		this.resetTracking();
-		this.track_stop();
-		this.callback_stop();
+        this.stopProgress();
+        this.pause();
+        this.seek(0);
+        this.resetTracking();
+        this.track_stop();
+        this.callback_stop();
 
-		this.flag_stopping = false;
-	},
+        this.flag_stopping = false;
+    },
 
-	seek(num) {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) {
-			this.stopProgress();
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.SEEK, num);
-		}
-	},
+    seek(num) {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget) {
+            this.stopProgress();
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.SEEK, num);
+        }
+    },
 
-	getTime() {
-		return this.playhead;
-	},
+    getTime() {
+        return this.playhead;
+    },
 
-	isPlayerReady() {
-		if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.IS_PLAYER_READY);
-	},
+    isPlayerReady() {
+        if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers.IS_PLAYER_READY);
+    },
 
-	tagSeek(num) {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) {
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.GO_TO_TAG, num);
-			this.track_tagSeek();
-		}
-	},
+    tagSeek(num) {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget) {
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.GO_TO_TAG, num);
+            this.track_tagSeek();
+        }
+    },
 
-	tagOpen(num) {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) {
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.OPEN_TAG, num);
-		}
-	},
+    tagOpen(num) {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget) {
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.OPEN_TAG, num);
+        }
+    },
 
-	tagClose() {
-		if(this.api && this.flag_ready && 
-			this.flag_widget) 
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.CLOSE_WIDGET);
-	},
+    tagClose() {
+        if(this.api && this.flag_ready &&
+            this.flag_widget)
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.CLOSE_WIDGET);
+    },
 
-	mute() {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) 
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.MUTE_VOLUME);
-	},
+    mute() {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget)
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.MUTE_VOLUME);
+    },
 
-	unmute() {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) 
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.UNMUTE_VOLUME);
-	},
+    unmute() {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget)
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.UNMUTE_VOLUME);
+    },
 
-	setVolume(num) {
-		if(this.api && this.flag_ready && 
-			!this.flag_widget) 
-			window.wirewax.triggerEvent(window.wirewax.events.triggers.CHANGE_VOLUME, num);
-	},
+    setVolume(num) {
+        if(this.api && this.flag_ready &&
+            !this.flag_widget)
+            window.wirewax.triggerEvent(window.wirewax.events.triggers.CHANGE_VOLUME, num);
+    },
 
-	// custom() {
-	// 	if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers., data);
-	// },
+    // custom() {
+    //  if(this.api && this.flag_ready) window.wirewax.triggerEvent(window.wirewax.events.triggers., data);
+    // },
 
-	resetVariables() {
+    resetVariables() {
 
-	},
+    },
 
-	resetPlayback() {
+    resetPlayback() {
 
-	},
+    },
 
-	unload() {
-		this.stop();
-		this.stopProgress();
+    unload() {
+        this.stop();
+        this.stopProgress();
 
-		if(this.dom_overlay) {
+        if(this.dom_overlay) {
 
-			let _handler = (e) => {
-        		this.eventHandler(e);
-        	};
+            let _handler = (e) => {
+                this.eventHandler(e);
+            };
 
-			this.dom_overlay.removeEventListener('click', _handler, false );
-			this.dom_play.removeEventListener('click', _handler, false );
-			this.dom_sound.removeEventListener('click', _handler, false );
-			this.dom_replay.removeEventListener('click', _handler, false );
-			
-		}
+            this.dom_overlay.removeEventListener('click', _handler, false );
+            this.dom_play.removeEventListener('click', _handler, false );
+            this.dom_sound.removeEventListener('click', _handler, false );
+            this.dom_replay.removeEventListener('click', _handler, false );
 
-		if(this.dom_container)
-			this.dom_container.innerHTML = '';
-		this.proxy = null;
+        }
 
-		this.params = {};
-		this.volume = -1;
-		this.flag_paused = false;
-		this.flag_playing = false;
-		this.flag_finished = false;
-		this.flag_widget = false;
-		this.flag_stopping = false;
-		this.flag_ready = false;
-	},
+        if(this.dom_container)
+            this.dom_container.innerHTML = '';
 
-	destroy() {
-		this.unload();
-	},
+        this.proxy = null;
 
-	trace(str, str2) {
-		if(this.debug) {
+        this.params = {};
+        this.volume = -1;
+        this.flag_paused = false;
+        this.flag_playing = false;
+        this.flag_finished = false;
+        this.flag_widget = false;
+        this.flag_stopping = false;
+        this.flag_ready = false;
+    },
 
-			if(window.console) {
-				window.console.log(str, str2 ? str2 : '');
-			}
+    destroy() {
+        this.unload();
+    },
 
-			if( this.dom_debug ) {
-				this.dom_debug.innerHTML += ( str2 ? ( str2 + ': ' ) : '' ) + str + '<br>';
-			}
-		}
-	},
+    trace(str, str2) {
+        if(this.debug) {
 
-	setListeners() {
-		for ( let key in window.wirewax.events.listeners ) {
-			window.wirewax.addEventListener( window.wirewax.events.listeners[key], (e) => {
-				this.eventHandler(e);
-			}, false );
-		}
-	},
+            if(window['console']) {
+                if(str2)
+                    console.log(str, str2);
+                else
+                    console.log(str);
+            }
 
-	listEvents() {
-		for ( let key in window.wirewax.events.listeners )
-			console.log(window.wirewax.events.listeners[key]);
-	},
+            if( this.dom_debug ) {
+                this.dom_debug.innerHTML += ( str2 ? ( str2 + ': ' ) : '' ) + str + '<br>';
+            }
+        }
+    },
 
-	setVendor(element, property, value) {
+    setListeners() {
+        for ( let key in window.wirewax.events.listeners ) {
+            window.wirewax.addEventListener( window.wirewax.events.listeners[key], (e) => {
+                this.eventHandler(e);
+            }, false );
+        }
+    },
+
+    listEvents() {
+        for ( let key in window.wirewax.events.listeners )
+            console.log(window.wirewax.events.listeners[key]);
+    },
+
+    setVendor(element, property, value) {
         let styles = window.getComputedStyle(element, '');
         let regexp = new RegExp(property+'$', "i");
 
@@ -777,6 +801,22 @@ WireWaxPlayer.prototype = {
         } else {
             el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
         }
+    },
+
+    emergencyStop() {
+
+        this.flag_error = true;
+
+        this.overlayShow(this.dom_play);
+        this.setVendor(this.dom_overlay, 'pointerEvents', 'none');
+        this.dom_container.style.cursor = 'pointer';
+
+        this.flag_muted = false;
+        this.volume = 1;
+        this.setVolume(1);
+
+        this.callback_error();
+
     },
 
     reflow(passive) {
@@ -807,25 +847,25 @@ WireWaxPlayer.prototype = {
 };
 
 if( !window['wirewax'] ) {
-	let checkDebug = ( window['console'] && window['debug'] ) ? true : false;
+    let checkDebug = ( window['console'] && window['debug'] ) ? true : false;
 
-	// NO API YET, LOAD MANUALLY
-	if(checkDebug) console.log('LOADING WireWax API');
+    // NO API YET, LOAD MANUALLY
+    if(checkDebug) console.log('LOADING WireWax API');
 
-	let loadFunction = () => {
+    let loadFunction = () => {
         if(checkDebug) console.log('WireWax API loaded');
     }
 
     let s = document.createElement("script");
-    	s.type = "text/javascript";
-    	s.src = 'https://edge-player.wirewax.com/ww4release/javascripts/wirewax-iframe-api.js';
-		s.addEventListener("load", loadFunction, false);
+        s.type = "text/javascript";
+        s.src = 'https://edge-player.wirewax.com/ww4release/javascripts/wirewax-iframe-api.js';
+        s.addEventListener("load", loadFunction, false);
 
     let head = document.getElementsByTagName("head")[0];
         head.appendChild(s);
 }
 
-/* 
+/*
 
 CAVEATS FOR README:
 

@@ -28,7 +28,9 @@ $('.btn').click(function(){
 			vid.load({
 				src: '//embed.wirewax.com/8022625/7bafa8/',
 				autoplay: true,
-				duration: 111.07639
+				duration: 111.07639,
+				chromeless: true,
+				overlay: true
 			});
 		break;
 

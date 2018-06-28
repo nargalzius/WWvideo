@@ -1,7 +1,7 @@
 /*!
  *	WIREWAX VIDEO HELPER
  *
- *	1.4
+ *	1.5
  *
  *	author: Carlo J. Santos
  *	email: carlosantos@gmail.com
@@ -11,6 +11,7 @@
  */
 
 /* eslint-disable no-console */
+/* eslint comma-dangle: ["error", "only-multiline"] */
 
 function WireWaxPlayer(){}
 
@@ -29,8 +30,70 @@ WireWaxPlayer.prototype = {
 		cover: true,
 		chromeless: false,
 		replaywithsound: true,
-		continuecfs: true
+		continuecfs: true,
+		overlay: false,
 	},
+
+	dom_container: null,
+	dom_overlay: null,
+	dom_play: null,
+	dom_sound: null,
+    dom_replay: null,
+
+	svg: {
+        play: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M12 20.016q3.281 0 5.648-2.367t2.367-5.648-2.367-5.648-5.648-2.367-5.648 2.367-2.367 5.648 2.367 5.648 5.648 2.367zM12 2.016q4.125 0 7.055 2.93t2.93 7.055-2.93 7.055-7.055 2.93-7.055-2.93-2.93-7.055 2.93-7.055 7.055-2.93zM9.984 16.5v-9l6 4.5z"></path></svg>',
+        sound: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M14.016 3.234q3.047 0.656 5.016 3.117t1.969 5.648-1.969 5.648-5.016 3.117v-2.063q2.203-0.656 3.586-2.484t1.383-4.219-1.383-4.219-3.586-2.484v-2.063zM16.5 12q0 2.813-2.484 4.031v-8.063q2.484 1.219 2.484 4.031zM3 9h3.984l5.016-5.016v16.031l-5.016-5.016h-3.984v-6z"></path></svg>',
+        replay: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64" viewBox="0 0 24 24"><path fill="#444444" d="M12 5.016q3.328 0 5.672 2.344t2.344 5.625q0 3.328-2.367 5.672t-5.648 2.344-5.648-2.344-2.367-5.672h2.016q0 2.484 1.758 4.242t4.242 1.758 4.242-1.758 1.758-4.242-1.758-4.242-4.242-1.758v4.031l-5.016-5.016 5.016-5.016v4.031z"></path></svg>',
+    },
+
+    colors_play: '#FFF',
+    colors_sound: '#FFF',
+    colors_replay: '#FFF',
+    colors_bg: 'rgba(0,0,0,0.4)',
+
+    dom_template_play() {
+        this.dom_play = document.createElement('div');
+        this.dom_play.style.backgroundColor = this.colors_bg;
+        this.setVendor(this.dom_play, 'borderRadius', '32px');
+        this.dom_play.innerHTML = this.svg.play;
+        this.dom_play.getElementsByTagName('path')[0].style.fill = this.colors_play;
+    },
+    dom_template_sound() {
+        this.dom_sound = document.createElement('div');
+        this.dom_sound.style.backgroundColor = this.colors_bg;
+        this.setVendor(this.dom_sound, 'borderRadius', '32px');
+        this.dom_sound.innerHTML = this.svg.sound;
+        this.dom_sound.getElementsByTagName('path')[0].style.fill = this.colors_sound;
+    },
+     dom_template_replay() {
+        this.dom_replay = document.createElement('div');
+        this.dom_replay.style.backgroundColor = this.colors_bg;
+        this.setVendor(this.dom_replay, 'borderRadius', '32px');
+        this.dom_replay.innerHTML = this.svg.replay;
+        this.dom_replay.getElementsByTagName('path')[0].style.fill = this.colors_replay;
+        this.dom_replay.getElementsByTagName('svg')[0].style.marginTop = '-5px';
+    },
+
+    overlayShow(el) {
+
+    	this.dom_overlay.style.display = 'block';
+
+    	let arr = [
+    		this.dom_play, 
+    		this.dom_replay, 
+    		this.dom_sound,
+    	];
+
+    	el.style.display = 'block';
+
+    	for(let i = 0; i < arr.length; i++) {
+    		if( arr[i] !== el )
+    			arr[i].style.display = 'none';
+    	}
+
+    	this.reflow(true);
+    },
+
 	api: false,
 	playhead: 0,
 	volume: -1,
@@ -45,11 +108,13 @@ WireWaxPlayer.prototype = {
 	flag_vol_nonce: true,
 	flag_vol_mute: false,
 	flag_events: false,
+	flag_overlay: false,
 	load_int: null,
 	init_int: null,
 	prog_int: null,
 	proxy: null,
-	dom_container: null,
+
+    centered_controls: {},
 	
 
 	evaluate(params) {
@@ -121,7 +186,6 @@ WireWaxPlayer.prototype = {
 				else
 					this.trace(this.params, 'params (init)');
 			}
-
 		} else {
 			this.init_int = setTimeout(() => { this.init(params); }, 500);
 		}
@@ -142,13 +206,11 @@ WireWaxPlayer.prototype = {
 				this.evaluate(params);
 
 				this.trace(this.params, 'params (load)');
-				let extras = '?player='+this.params.player
-						   + '&autoplay='+this.params.autoplay
-						   + '&muted='+this.params.startmuted
-						   + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' );
-			
-				if(this.params.cover)
-					extras += '&fullBleed=true';
+				let extras = '?player=' +this.params.player
+						   + '&autoplay=' +this.params.autoplay
+						   + '&muted=' + this.params.startmuted
+						   + '&skin=' + ( this.params.chromeless ? 'SkinBarebonesSlick' : 'SkinDefaultSlick' )
+						   + '&fullBleed=' + this.params.cover;
 
 				this.proxy = document.createElement('iframe');
 				this.proxy.id = "proxy_"+this.params.id;
@@ -177,6 +239,76 @@ WireWaxPlayer.prototype = {
 		}
 	},
 
+	setupOverlay() {
+
+		this.dom_overlay = document.createElement('div');
+		this.dom_overlay.className = 'wwOverlay';
+		this.dom_overlay.style.position = 'absolute';
+		this.dom_overlay.style.top = '0';
+		this.dom_overlay.style.left = '0';
+		this.dom_overlay.style.width = '100%';
+		this.dom_overlay.style.height = '100%';
+
+		// BIG BUTTONS
+        this.dom_template_play();
+        this.addClass(this.dom_play, 'cbtn');
+        this.addClass(this.dom_play, 'v_control_bb');
+        this.addClass(this.dom_play, 'play');
+        this.dom_play.style.zIndex = this.zindex + 2;
+        this.dom_play.style.display = 'block';
+        this.dom_play.style.position = 'absolute';
+        this.dom_play.style.cursor = 'pointer';
+        this.dom_overlay.appendChild(this.dom_play);
+        this.dom_play.style.display = 'none';
+        this.centered_controls.play = this.dom_play;
+
+        this.dom_template_sound();
+        this.addClass(this.dom_sound, 'cbtn');
+        this.addClass(this.dom_sound, 'v_control_bb');
+        this.addClass(this.dom_sound, 'sound');
+        this.dom_sound.style.zIndex = this.zindex + 2;
+        this.dom_sound.style.display = 'block';
+        this.dom_sound.style.position = 'absolute';
+        this.dom_sound.style.cursor = 'pointer';
+		this.dom_overlay.appendChild(this.dom_sound);
+        this.dom_sound.style.display = 'none';
+        this.centered_controls.sound = this.dom_sound;
+
+        if(this.params.uniquereplay) {
+            this.dom_template_replay();
+        } else {
+            this.dom_replay = this.dom_play.cloneNode(true);
+            this.removeClass(this.dom_replay, 'play');
+        }
+        this.addClass(this.dom_replay, 'cbtn');
+        this.addClass(this.dom_replay, 'v_control_bb');
+        this.addClass(this.dom_replay, 'replay');
+        this.dom_replay.id = 'replay_btn'
+        this.dom_replay.style.zIndex = this.zindex + 2;
+        this.dom_replay.style.display = 'block';
+        this.dom_replay.style.position = 'absolute';
+        this.dom_replay.style.cursor = 'pointer';
+        this.dom_overlay.appendChild(this.dom_replay);
+        this.dom_replay.style.display = 'none';
+        this.centered_controls.replay = this.dom_replay;
+
+        let _handler = (e) => {
+        	this.eventHandler(e);
+        };
+
+        this.dom_overlay.addEventListener('click', _handler, false );
+        this.dom_play.addEventListener('click', _handler, false );
+		this.dom_sound.addEventListener('click', _handler, false );
+		this.dom_replay.addEventListener('click', _handler, false );
+
+		this.trace(this.dom_container, 'READY');
+		
+        this.dom_container.appendChild(this.dom_overlay);
+
+        this.flag_overlay = true;
+        this.reflow(true);
+	},
+
 	eventHandler(e) {
 
 		// if(e.name != 'returnCurrentTime')
@@ -188,6 +320,10 @@ WireWaxPlayer.prototype = {
 					this.flag_ready = true;
 					this.flag_vol_nonce = true;
 					this.callback_ready();
+
+					if( this.params.chromeless && this.params.overlay ) {
+						this.setupOverlay();
+					}
 				}
 			break;
 			case 'hasPlayed':
@@ -202,7 +338,7 @@ WireWaxPlayer.prototype = {
 					if(this.flag_paused)
 						this.callback_play();
 
-					this.flag_paused = false;
+					this.flag_paused = false;					
 				}
 			break;
 			case 'videoEnd':
@@ -220,6 +356,11 @@ WireWaxPlayer.prototype = {
 					this.setVolume(1);
 					this.flag_vol_mute = false;
 				}
+
+				if(this.params.chromeless && this.params.overlay) {
+					this.overlayShow(this.dom_replay);
+				}
+
 			break;
 			case 'hasPaused':
 
@@ -296,6 +437,15 @@ WireWaxPlayer.prototype = {
 
 		            this.callback_play();
 		            this.callback_start();
+
+		            if(this.params.chromeless && this.params.overlay) {
+						if(this.params.startmuted)
+							this.dom_sound.style.display = 'block';
+						else 
+							this.dom_play.style.display = 'block';
+
+						this.reflow(true);
+					}
 				}
 
 				if(this.track.q25 !== true && phpercentage >= 25) {
@@ -348,7 +498,20 @@ WireWaxPlayer.prototype = {
 			break;
 
 			default:
-				this.trace('nada');
+
+				if(e.type === 'click') {
+
+					if(this.dom_sound.style.display === 'block') {
+						this.unmute();
+					} else {
+						this.play();
+					}	
+					this.dom_overlay.style.display = 'none';				
+				} else {
+					this.trace('nada');
+				}
+
+
 		}
 	},
 
@@ -532,6 +695,19 @@ WireWaxPlayer.prototype = {
 		this.stop();
 		this.stopProgress();
 
+		if(this.dom_overlay) {
+
+			let _handler = (e) => {
+        		this.eventHandler(e);
+        	};
+
+			this.dom_overlay.removeEventListener('click', _handler, false );
+			this.dom_play.removeEventListener('click', _handler, false );
+			this.dom_sound.removeEventListener('click', _handler, false );
+			this.dom_replay.removeEventListener('click', _handler, false );
+			
+		}
+
 		if(this.dom_container)
 			this.dom_container.innerHTML = '';
 		this.proxy = null;
@@ -564,18 +740,70 @@ WireWaxPlayer.prototype = {
 	},
 
 	setListeners() {
-
 		for ( let key in window.wirewax.events.listeners ) {
 			window.wirewax.addEventListener( window.wirewax.events.listeners[key], (e) => {
 				this.eventHandler(e);
-			} );
+			}, false );
 		}
 	},
 
 	listEvents() {
 		for ( let key in window.wirewax.events.listeners )
 			console.log(window.wirewax.events.listeners[key]);
-	}
+	},
+
+	setVendor(element, property, value) {
+        let styles = window.getComputedStyle(element, '');
+        let regexp = new RegExp(property+'$', "i");
+
+        for (let key in styles) {
+            if( regexp.test(key) ) {
+                element.style[key] = value;
+            }
+        }
+    },
+
+    addClass(el, className) {
+        if (el.classList) {
+            el.classList.add(className);
+        } else {
+            el.className += ' ' + className;
+        }
+    },
+
+    removeClass(el, className) {
+        if (el.classList) {
+            el.classList.remove(className);
+        } else {
+            el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+        }
+    },
+
+    reflow(passive) {
+        if(this.api && this.dom_overlay) {
+            if(this.proxy) {
+                this.proxy.width = this.dom_container.offsetWidth;
+                this.proxy.height = this.dom_container.offsetHeight;
+            }
+
+            // CENTER ALL ELEMENTS FOUND IN center_controls ARRAY
+            for(let key in this.centered_controls) {
+                let item = this.centered_controls[key];
+
+                    item.style.top = '50%';
+                    item.style.marginTop = ( ( item.offsetHeight / 2 ) * -1 ) + 'px';
+                    item.style.left = '50%';
+                    item.style.marginLeft = ( ( item.offsetWidth / 2 ) * -1 ) + 'px';
+            }
+
+            if(!passive) {
+                this.trace('reflow video');
+            }
+        }
+        else if(!passive) {
+            this.trace("reflow useless: video elements aren't ready");
+        }
+    },
 };
 
 if( !window['wirewax'] ) {

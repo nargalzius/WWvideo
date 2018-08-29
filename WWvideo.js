@@ -1,7 +1,7 @@
 /*!
  *  WIREWAX VIDEO HELPER
  *
- *  1.6
+ *  1.7
  *
  *  author: Carlo J. Santos
  *  email: carlosantos@gmail.com
@@ -205,8 +205,10 @@ WireWaxPlayer.prototype = {
 
                 this.evaluate(params);
 
-                if( this.params.chromeless && this.params.overlay )
+                // if( this.params.chromeless && this.params.overlay && this.params.autoplay ) {
+                if( this.params.chromeless && this.params.overlay ) {
                     this.setupOverlay();
+                }
 
                 this.trace(this.params, 'params (load)');
                 let extras = '?player=' +this.params.player
@@ -304,7 +306,7 @@ WireWaxPlayer.prototype = {
         this.dom_sound.addEventListener('click', _handler, false );
         this.dom_replay.addEventListener('click', _handler, false );
 
-        this.trace(this.dom_container, 'READY');
+        this.trace(this.dom_container, 'Overlay Created');
 
         this.dom_container.appendChild(this.dom_overlay);
 
@@ -314,8 +316,8 @@ WireWaxPlayer.prototype = {
 
     eventHandler(e) {
 
-        // if(e.name != 'returnCurrentTime')
-        //     this.trace(e);
+        if(e.name != 'returnCurrentTime')
+            this.trace(e, 'eventHandler');
 
         switch(e.name) {
             case 'playerReady':
@@ -327,9 +329,13 @@ WireWaxPlayer.prototype = {
                     if( this.params.chromeless && this.params.overlay ) {
                         this.dom_overlay.style.cursor = 'pointer';
                         if( this.params.autoplay ) {
+                            // THIS RELIES ON A DECENT SPEED CONNECTION
                             this.error_int = setTimeout(()=>{
-                                this.emergencyStop();
+                                this.forceOverlayPlayButton();
+                                this.callback_error('callback_error', 'DEFAULT CALLBACK');
                             }, 5000);
+                        } else {
+                            this.forceOverlayPlayButton();
                         }
                     }
                 }
@@ -347,10 +353,6 @@ WireWaxPlayer.prototype = {
                         this.callback_play();
 
                     this.flag_paused = false;
-                }
-
-                if(!this.track.started && this.flag_ready) {
-                    clearInterval(this.error_int);
                 }
             break;
             case 'videoEnd':
@@ -386,16 +388,45 @@ WireWaxPlayer.prototype = {
             case 'hasSeeked':
                 if( !this.flag_paused )
                     this.startProgress();
+
+                // RESOLVE AUTOPLAY OVERLAY STUFF
+                if( this.params.autoplay && this.params.overlay ) {
+
+                    this.trace(this.error_int, 'CLEARING PROMISE CHECKER');
+                    clearInterval(this.error_int);
+                    this.error_int = null;
+                
+                    if( this.flag_error && !this.track.started ) {
+
+                        this.flag_error = false;
+
+                        this.overlayShow(this.dom_sound);
+                        this.setVendor(this.dom_overlay, 'pointerEvents', 'auto');
+                        // this.dom_container.style.cursor = 'auto';
+
+                        // this.flag_muted = true;
+                        // this.volume = 0;
+                        // this.setVolume(0);
+
+                        this.play();
+                    }
+                }
             break;
             case 'volumeChange':
 
+                if( !this.track.started && this.flag_error && this.dom_play.style.display === 'block' ) {
+                    this.flag_error = false;
+                    this.flag_muted = false;
+                    this.volume = 1;
+                    this.dom_overlay.style.display = 'none';
+                } else
                 if( e.data.volume != this.volume ) {
 
                     if( this.volume == 0 ) {
 
                         if(!this.flag_vol_nonce && this.flag_playing) {
                             this.track_unmute();
-                            this.callback_volumechange();
+                            this.callback_volume();
 
                             if(!this.params.continuecfs) {
                                 this.seek(0);
@@ -406,9 +437,9 @@ WireWaxPlayer.prototype = {
                         this.flag_vol_nonce = false;
                     } else
                     if( e.data.volume == 0 ) {
-                        if(this.playhead > 0 && !this.flag_vol_nonce && !this.flag_muted) {
+                        if( this.playhead > 0 && !this.flag_vol_nonce && !this.flag_muted ) {
                             this.track_mute();
-                            this.callback_volumechange();
+                            this.callback_volume();
                         } else {
                             this.flag_muted = false;
                         }
@@ -419,7 +450,7 @@ WireWaxPlayer.prototype = {
                 } else
                 if( this.flag_vol_nonce ) {
 
-                    if(this.params.startmuted) {
+                    if( this.params.startmuted ) {
                         this.volume = 1;
                         this.setVolume(1);
                         this.flag_muted = true;
@@ -451,16 +482,17 @@ WireWaxPlayer.prototype = {
                     this.callback_start();
 
                     if(this.params.chromeless && this.params.overlay) {
-                        if(this.params.startmuted)
-                            this.dom_sound.style.display = 'block';
-                        else
-                            this.dom_play.style.display = 'block';
+                        if(this.params.startmuted && this.volume === 0)
+                            this.overlayShow(this.dom_sound);
+                        // else {
+                        //     this.overlayShow(this.dom_play);
+                        // }
 
                         this.reflow(true);
                     }
 
                     this.setVendor(this.dom_overlay, 'pointerEvents', 'auto');
-                    this.dom_container.style.cursor = 'auto';
+                    // this.dom_container.style.cursor = 'auto';
                     if( this.flag_error )
                         this.dom_overlay.style.display = 'none';
 
@@ -521,17 +553,30 @@ WireWaxPlayer.prototype = {
                     this.dom_replay.style.display === 'block' ||
                     this.dom_sound.style.display === 'block' )
                 ) {
-                    this.dom_overlay.style.display = 'none';
 
-                    if(this.dom_sound.style.display === 'block')
-                        this.unmute();
-                    else
-                        this.play();
+                	if( this.flag_playing || ( !this.flag_playing && this.flag_finished ) ) {
 
-                    this.dom_sound.style.display === 'none';
-                    this.dom_play.style.display === 'none';
-                    this.dom_replay.style.display === 'none';
+	                    this.dom_overlay.style.display = 'none';
 
+	                    if(this.dom_sound.style.display === 'block')
+	                        this.unmute();
+	                    else {
+	                        
+                            if( this.flag_error) {
+                                this.flag_muted = false;
+                                this.volume = 1;
+                                this.setVolume(1);
+                            }
+
+                            this.flag_error = false;
+                            this.play();
+                        }
+
+                        for(let key in this.centered_controls) {
+                            let item = this.centered_controls[key];
+                                item.style.display === 'none';
+                        }
+                	}
                 }
         }
     },
@@ -572,6 +617,10 @@ WireWaxPlayer.prototype = {
         this.flag_paused = false;
     },
 
+    track_tagOpen()  { this.trace('track_tagOpen',  'DEFAULT CALLBACK'); },
+    track_tagClose() { this.trace('track_tagClose', 'DEFAULT CALLBACK'); },
+    track_tagSeek()  { this.trace('track_tagSeek',  'DEFAULT CALLBACK'); },
+
     track_start()    { this.trace('track_start',    'DEFAULT CALLBACK'); },
     track_stop()     { this.trace('track_stop',     'DEFAULT CALLBACK'); },
     track_end()      { this.trace('track_end',      'DEFAULT CALLBACK'); },
@@ -583,21 +632,29 @@ WireWaxPlayer.prototype = {
     track_q25()      { this.trace('track_q25',      'DEFAULT CALLBACK'); },
     track_q50()      { this.trace('track_q50',      'DEFAULT CALLBACK'); },
     track_q75()      { this.trace('track_q75',      'DEFAULT CALLBACK'); },
-    track_tagOpen()  { this.trace('track_tagOpen',  'DEFAULT CALLBACK'); },
-    track_tagClose() { this.trace('track_tagClose', 'DEFAULT CALLBACK'); },
-    track_tagSeek()  { this.trace('track_tagSeek',  'DEFAULT CALLBACK'); },
+    // track_enterfs() { this.trace('track_enterfs', 'DEFAULT CALLBACK'); },
+    // track_exitfs()  { this.trace('track_exitfs',  'DEFAULT CALLBACK'); },
 
-    callback_progress()     {},
-    callback_ready()        { this.trace('callback_ready',        'DEFAULT CALLBACK'); },
-    callback_end()          { this.trace('callback_end',          'DEFAULT CALLBACK'); },
-    callback_play()         { this.trace('callback_play',         'DEFAULT CALLBACK'); },
-    callback_start()        { this.trace('callback_start',        'DEFAULT CALLBACK'); },
-    callback_error()        { this.trace('callback_error',        'DEFAULT CALLBACK'); },
-    callback_stop()         { this.trace('callback_stop',         'DEFAULT CALLBACK'); },
-    callback_pause()        { this.trace('callback_pause',        'DEFAULT CALLBACK'); },
-    callback_show()         { this.trace('callback_show',         'DEFAULT CALLBACK'); },
-    callback_volumechange() { this.trace('callback_volumechange', 'DEFAULT CALLBACK'); },
-    callback_cart(data)     { this.trace('callback_cart',         'DEFAULT CALLBACK');
+    // callback_buffer()   {},
+    // callback_loading()  {},
+    callback_progress() {},
+    callback_ready()           { this.trace('callback_ready',  'DEFAULT CALLBACK'); },
+    callback_end()             { this.trace('callback_end',    'DEFAULT CALLBACK'); },
+    callback_play()            { this.trace('callback_play',   'DEFAULT CALLBACK'); },
+    callback_stop()            { this.trace('callback_stop',   'DEFAULT CALLBACK'); },
+    callback_pause()           { this.trace('callback_pause',  'DEFAULT CALLBACK'); },
+    callback_start()           { this.trace('callback_start',  'DEFAULT CALLBACK'); },
+    callback_error(str1, str2) { this.trace(str1, str2); },
+    callback_volume()          { 
+
+        let tempstr = '';
+
+        if(this.notifications.volume) tempstr = this.flag_muted ? ' (muted)' : ' (unmuted)';
+
+        this.trace('callback_volume'+tempstr, 'DEFAULT CALLBACK');
+    },
+    
+    callback_cart(data)        { this.trace('callback_cart',   'DEFAULT CALLBACK');
         this.trace(data, 'cart data');
     },
 
@@ -758,7 +815,7 @@ WireWaxPlayer.prototype = {
             }
 
             if( this.dom_debug ) {
-                this.dom_debug.innerHTML += ( str2 ? ( str2 + ': ' ) : '' ) + str + '<br>';
+                this.dom_debug.innerHTML += ( str2 ? str2 + ': ' : '' ) + str + '<br>';
             }
         }
     },
@@ -803,19 +860,12 @@ WireWaxPlayer.prototype = {
         }
     },
 
-    emergencyStop() {
+    forceOverlayPlayButton() {
 
         this.flag_error = true;
 
         this.overlayShow(this.dom_play);
         this.setVendor(this.dom_overlay, 'pointerEvents', 'none');
-        this.dom_container.style.cursor = 'pointer';
-
-        this.flag_muted = false;
-        this.volume = 1;
-        this.setVolume(1);
-
-        this.callback_error();
 
     },
 

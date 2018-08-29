@@ -30,12 +30,12 @@ $('.btn').click(function () {
 			vid.load({
 				src: '//embed.wirewax.com/8022625/7bafa8/',
 				autoplay: true,
-				duration: 111.07639,
-				chromeless: true,
-				overlay: true
+				duration: 111.07639
 			});
 			break;
-
+		case 'video1end':
+			vid.seek(105);
+			break;
 		case 'video2':
 			vid.load({
 				src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
@@ -47,9 +47,15 @@ $('.btn').click(function () {
 			vid.load({
 				src: '//embed.wirewax.com/8012777?embedLoc=footlocker/',
 				autoplay: true,
-				duration: 94.738446
+				duration: 94.738446,
+				chromeless: true,
+				overlay: true
 			});
 			break;
+		case 'video2end':
+			vid.seek(90);
+			break;
+
 	}
 
 	debugReset();
